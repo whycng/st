@@ -8,10 +8,14 @@
 
 #include <malloc.h>
 
-#include "fstbrk.h"
-#include "tttomo.h" 
+#include "base.h"
+#include "fst_ttt.h"
+//#include "fstbrk.h"
+//#include "tttomo.h" 
+#include "test.h"
 
- 
+// 引入base.cpp
+ /* 
 double readdouble8(FILE* fpin)
 {
     double data;
@@ -55,6 +59,8 @@ int readint4(FILE* fpin)
 
     return (data);
 }
+*/
+
 
 //WIS 读取文件头信息 --tmp
 void Read_FileInfor( FILE* fp)
@@ -162,6 +168,8 @@ void read_VelHeadInfo(FILE* fp, FILE* output, VelHeader& velHeader)
 
 }
 
+// 测试函数
+/*
 // 读取测试--二进制输出 --tmp
 void read_test_b(const char* fileName, const char* outFielName, int mode = 0)
 {
@@ -224,6 +232,8 @@ void read_test_fd(const char* fileName, const char* outFielName, int mode=0)
     }
  
 }
+*/
+
 // velo Section 读取 数据是float4
 void read_VeloSection_dat(const char* fileName, const char* outFielName, int nwf_L_set = 501)
 {
@@ -750,55 +760,53 @@ void read_as_WIS_d(const char* fileName, const char* outFielName, int nwf_L_set 
 
 }
 
-
-
  
-// 遍历指定文件夹下所有文件夹
-void get_sub_folders(std::string path, std::vector<std::string>& folders) {
-
-    intptr_t handle = 0;
-    struct _finddata_t file_info;
-
-    std::string search_path = path + "/*";
-
-    if ((handle = _findfirst(search_path.c_str(), &file_info)) != -1) {
-
-        do {
-
-            if (file_info.attrib & _A_SUBDIR && strcmp(file_info.name, ".") && strcmp(file_info.name, "..")) {
-
-                std::string folder_path = path + "/" + file_info.name;
-                folders.push_back(folder_path);
-
-                // 递归遍历子文件夹
-                get_sub_folders(folder_path, folders);
-
-            }
-
-        } while (_findnext(handle, &file_info) == 0);
-
-        _findclose(handle);
-
-    }
-
-}
-
-// 获取某一文件夹下，指定文件后缀的文件
-void get_need_file(std::string path, std::vector<std::string>& file, std::string ext)
-{
-    intptr_t file_handle = 0;
-    struct _finddata_t file_info;
-    std::string temp;
-    if ((file_handle = _findfirst(temp.assign(path).append("/*" + ext).c_str(), &file_info)) != -1)
-    {
-        do
-        {
-            file.push_back(temp.assign(path).append("/").append(file_info.name));
-        } while (_findnext(file_handle, &file_info) == 0);
-        _findclose(file_handle);
-    }
-}
-
+//// 遍历指定文件夹下所有文件夹
+//void get_sub_folders(std::string path, std::vector<std::string>& folders) {
+//
+//    intptr_t handle = 0;
+//    struct _finddata_t file_info;
+//
+//    std::string search_path = path + "/*";
+//
+//    if ((handle = _findfirst(search_path.c_str(), &file_info)) != -1) {
+//
+//        do {
+//
+//            if (file_info.attrib & _A_SUBDIR && strcmp(file_info.name, ".") && strcmp(file_info.name, "..")) {
+//
+//                std::string folder_path = path + "/" + file_info.name;
+//                folders.push_back(folder_path);
+//
+//                // 递归遍历子文件夹
+//                get_sub_folders(folder_path, folders);
+//
+//            }
+//
+//        } while (_findnext(handle, &file_info) == 0);
+//
+//        _findclose(handle);
+//
+//    }
+//
+//}
+//
+//// 获取某一文件夹下，指定文件后缀的文件
+//void get_need_file(std::string path, std::vector<std::string>& file, std::string ext)
+//{
+//    intptr_t file_handle = 0;
+//    struct _finddata_t file_info;
+//    std::string temp;
+//    if ((file_handle = _findfirst(temp.assign(path).append("/*" + ext).c_str(), &file_info)) != -1)
+//    {
+//        do
+//        {
+//            file.push_back(temp.assign(path).append("/").append(file_info.name));
+//        } while (_findnext(file_handle, &file_info) == 0);
+//        _findclose(file_handle);
+//    }
+//}
+// 
  
 
 // 遍历文件 批量处理 read_as_WIS_d；read_txt_as_WIS_d
@@ -897,11 +905,18 @@ int main()
     /*read_txt_as_WIS_d("E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\reflection_image.txt",
         "E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\SWI.txt",513,1);*/
 
-    read_txt_as_WIS_d("E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\velocity_profile.txt",
-        "E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\VEP.txt", 501,2);
+  /*  read_txt_as_WIS_d("E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\velocity_profile.txt",
+        "E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\VEP.txt", 501,2);*/
 
     // 遍历修改 
     //batch_txt2WIS(R"(E:\Proj\vsProj\st_FileSave\数据-原始备份 - 副本)", ".txt");
+
+
+
+
+
+    Fst_ttt fst_ttt;
+    fst_ttt.ft_main();
 
     //float ret[100];
     //float scard[8] = {0};//
@@ -946,8 +961,8 @@ int main()
 
 
 
-   /*
-    for (int i = 0; i < 8; i++)
+   
+    /*for (int i = 0; i < 8; i++)
     {
         tstart[i] = 0;
     }
@@ -958,7 +973,7 @@ int main()
     
     fseek(fp1, 0, SEEK_SET); 
     while (fscanf_s(fp1, "%f", &t) != EOF) {
-        // process data
+         process data
         if (i < 8)
         {
             scard[i] = t;
@@ -979,7 +994,7 @@ int main()
     float m = 120.0f;
     float ma[3] = { 2.3f, 3.4f, 4.5f }; 
    
-    // 返回值rarvtm
+     返回值rarvtm
     fstbrkX(slowness,tt, nsamp,nR,RR,period,wdwdth,thrs,wvlen,pkmethod,rarvtm, data, tstart);
     
     for (int i = 0; i < nR; i++)
@@ -1009,8 +1024,8 @@ int main()
     std::cout << " ssfit:" << ssfit << " ,"
         << " ss0:" << ss0 << " ,"
         << " ssd:" << ssd << " ,"
-        << " dop:" << dop << std::endl;
-    */
+        << " dop:" << dop << std::endl;*/
+    
     // --
 
 

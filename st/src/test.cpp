@@ -1,7 +1,72 @@
 
- 
+#include "test.h"
+#include "base.h"
+
+#include <fstream>
+#include <iostream>
+
+// 读取测试--二进制输出 --tmp
+void read_test_b(const char* fileName, const char* outFielName, int mode )
+{
+    FILE* fp = NULL;
+    fopen_s(&fp, fileName, "rb");
+    FILE* output = NULL;
+    fopen_s(&output, outFielName, "w");
+    if (fp == NULL)
+    {
+        std::cout << "[ERROR] fopen_s ERROR" << std::endl;
+        return;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    long remaining = fsize - ftell(fp);
+    const int size = remaining;
+    char* buff = (char*)alloca(remaining * sizeof(char));
+
+    int len = fread(buff, 1, remaining, fp);
+
+    for (int i = 0; i < len; i++) {
+        printf("%02x ", buff[i]);
+    }
+    // 直接打印字节
+    char t;
+    while (fscanf_s(fp, "%c", &t) != EOF) {
+        std::cout << "." << t;
+    }
+}
+// 读取测试--全部以float4或者double8 --tmp
+void read_test_fd(const char* fileName, const char* outFielName, int mode )
+{
+    FILE* fp = NULL;
+    fopen_s(&fp, fileName, "rb");
+    if (fp == NULL)
+    {
+        std::cout << "[ERROR] fopen_s ERROR" << std::endl;
+        return;
+    }
+    // 全部以float4读取
+    int count = 0;
+    while (!feof(fp)) {
+        //float val = readfloat4(fp);
+        double val = readdouble8(fp);
 
 
+        std::cout << count << ":" << val << " ";
+        //fprintf(output, "%f ", val);
+
+        if (int(val) == 7425)
+        {
+            std::cout << "\n\n\n长度:" << count << std::endl;
+        }
+
+        count++;
+        if (count >= 2000)
+            return;
+    }
+
+}
 
 
 
