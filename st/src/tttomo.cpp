@@ -139,6 +139,11 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 		
 		////exponential variation model   这部分是关键，一个衰减指数实现单极纵波的几个短周期的快速拟合// 
 		V = (Vdeep - V0) * exp(-2 * (rd - rb) / (*dop));
+	/*	std::cout << "【Message142】 V:" << V << std::endl
+			<< "Vdeep - V0:" << Vdeep - V0 << std::endl
+			<< "exp(-2 * (rd - rb) / (*dop)): " << exp(-2 * (rd - rb) / (*dop)) << std::endl;*/
+
+
 	/*	std::cout << "    60 + j:" << 60 + j << 
 			  "    60 - j:" << 60 - j <<
 			"   ,j:" << j << " ,rd:" << rd <<
@@ -169,7 +174,8 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 		}
 		// std::cout << "V:" << V  << std::endl; -- 8000
 		ttfit[i] = tvtm(V);
-		// std::cout << "ttfit[" << i << "]:" << ttfit[i] << std::endl;
+		double t = ttfit[i];
+		//std::cout << "【Message172】ttfit[" << i << "]:" << ttfit[i] << std::endl;
 	}
 
 	// Compute model velocity fit to data //
@@ -195,7 +201,11 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 		V = sr / st;
 	}
 
-	for (i = 0; i < nrec; i++) ttfit[i] = ttslns[i] + (ttfit[i] - (TR + i * RR) / V) * 1e6;
+	for (i = 0; i < nrec; i++)
+	{
+		ttfit[i] = ttslns[i] + (ttfit[i] - (TR + i * RR) / V) * 1e6;
+		std::cout << "【Message201】ttfit[" << i << "]:" << ttfit[i] << std::endl;
+	}
 
 	*ssfit = 1.0e6 / V;
 
@@ -243,6 +253,7 @@ float tvtm(float V)
 		TT = sdo / Vf / cs + 2. * TT / gv1;
 	}
 
+	//std::cout << "【Message】<tvtm> TT:" << TT << std::endl;
 	return(TT);
 }
 

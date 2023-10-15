@@ -398,7 +398,7 @@ void read_VeloSection_dat_d(const char* fileName, const char* outFielName, int n
 
 }
 
-// 读取文本数据，保存为WIS格式
+// 读取文本数据，保存为WIS格式 mode=1 列名SWI，mode=2 列名VEP
 void read_txt_as_WIS_d(const char* fileName, const char* outFielName, int nwf_L_set = 501, int mode = 1)
 { 
     std::ifstream ifs(fileName);
@@ -664,7 +664,7 @@ void read_as_WIS_d(const char* fileName, const char* outFielName, int nwf_L_set 
     fprintf(output, "\n%.5lf ", dep);
     while (!feof(fp))
     {
-        std::cout << "dep: " << dep << std::endl;
+        // std::cout << "dep: " << dep << std::endl;
         if (index != 0)// 去除首行空行
         {
             //double dep = readdouble8(fp);
@@ -834,9 +834,21 @@ void batch_txt2WIS(std::string path, std::string need_extension, int nwf_L_set =
             std::string filename = my_file[i].substr(pos + 1); 
             std::string foldername = my_file[i].substr(0, pos);
             std::string outfile_SWI = foldername + "/SWI.txt";  //SWI VEP
+            std::string outfile_SWI_LR = foldername + "/SWI_LR.txt";  //SWI VEP
+            std::string outfile_SWI_UD = foldername + "/SWI_UD.txt";  //SWI VEP
             std::string outfile_VEP = foldername + "/VEP.txt";  //SWI VEP
             std::cout << filename << std::endl << outfile_SWI 
                 << std::endl << outfile_VEP << std::endl;
+
+   /*         std::string del1 = foldername + "/SWI.txt";
+            std::string del2 = foldername + "/SWI.txt_LR";
+            std::string del3 = foldername + "/SWI.txt_UD";
+
+            std::cout << "del1:" << del1 << std::endl;
+
+            std::remove(del1.c_str());
+            std::remove(del2.c_str());
+            std::remove(del3.c_str());*/
 
             if (!filename.compare("reflection_image.txt"))
             {
@@ -853,10 +865,19 @@ void batch_txt2WIS(std::string path, std::string need_extension, int nwf_L_set =
                 //std::cout << "[Test] 不等" << std::endl;
                 read_txt_as_WIS_d(my_file[i].c_str(), outfile_VEP.c_str(), 501,2);
             }
+            else if (!filename.compare("SWI_LR.dat"))
+            {  
+                read_as_WIS_d(my_file[i].c_str(), outfile_SWI_LR.c_str(), 513, 1);
+            }
+            else if (!filename.compare("SWI_UD.dat"))
+            { 
+                read_as_WIS_d(my_file[i].c_str(), outfile_SWI_UD.c_str(), 513, 1);
+            } 
             else
             {
                 std::cout << "[Warning] 既不是velocity_profile.txt 也不是reflection_image.txt" << std::endl;
             }
+        
         }
         if (my_file.size() == 0)
         {
@@ -870,6 +891,8 @@ void batch_txt2WIS(std::string path, std::string need_extension, int nwf_L_set =
     }
 
 }
+
+
 int main()
 { 
     /*  
@@ -877,18 +900,26 @@ int main()
     其余：501 
     */
 
-    // 数据是float4
+    /*输出文件名和源文件名一样即可，
+    如reflection_image.dat--> reflection_image.txt，便于批处理识别 */
+    
+    // 数据是float4-VeloSection-501
     // "E:\Proj\vsProj\st_FileSave\新建文件夹 (2)\ImgRes_Pre_XX.dat"
     // 测试VeloSection dat "E:\Proj\vsProj\st_FileSave\FY3-H3.dat"
     //read_VeloSection_dat("E:\\Proj\\vsProj\\Desktop\\VeloSection.dat", "output_VeloSection.txt");
     //read_VeloSection_dat("E:\\Proj\\vsProj\\st_FileSave\\FY3-H3.dat", "output_FY3-H3.txt");
     
-    //数据都是double8
+    //数据都是double8-reflection-513
     //read_VeloSection_dat_d("E:\\Proj\\vsProj\\st_FileSave\\dat_Files\\ImgRes_Pre_XX.dat",
     //    "E:\\Proj\\vsProj\\st_FileSave\\dat_Files\\output_ImgRes_Pre_XX.txt",513);//  1026/2
     //read_VeloSection_dat_d("E:\\Proj\\vsProj\\st_FileSave\\数据\\9-哈得302-H2\\reflection_image.dat",
-    //    "E:\\Proj\\vsProj\\st_FileSave\\数据\\9-哈得302-H2\\output_reflection_image.txt", 513);//
-  
+    //    "E:\\Proj\\vsProj\\st_FileSave\\数据\\9-哈得302-H2\\output_reflection_image.txt", 513);
+    // 再测试
+    //read_VeloSection_dat("E:\\Proj\\vsProj\\st_FileSave\\datas_all\\更新数据\\满深705\\velocity_profile.dat",
+    //    "E:\\Proj\\vsProj\\st_FileSave\\datas_all\\更新数据\\满深705\\output_velocity_profile.txt", 501);//
+
+
+
     //二进制读取测试 read_as_WIS_d
     //read_as_WIS_d("E:\\Proj\\vsProj\\st_FileSave\\数据\\9-哈得302-H2\\reflection_image.dat",
     //    "E:\\Proj\\vsProj\\st_FileSave\\数据\\9-哈得302-H2\\output_reflection_image_b2.dat", 513);//
@@ -901,23 +932,35 @@ int main()
         "E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\SWI.txt",513);*/
 
 
-    // 下面两个添加了参数mode
+    // 下面两个添加了参数mode：控制列名，mode=1 SWI ，mode=2 VEP 
     /*read_txt_as_WIS_d("E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\reflection_image.txt",
         "E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\SWI.txt",513,1);*/
 
   /*  read_txt_as_WIS_d("E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\velocity_profile.txt",
         "E:\\Proj\\vsProj\\st_FileSave\\数据-原始备份 - 副本\\1-富源3-H3\\VEP.txt", 501,2);*/
 
-    // 遍历修改 
+    // 遍历修改  
     //batch_txt2WIS(R"(E:\Proj\vsProj\st_FileSave\数据-原始备份 - 副本)", ".txt");
+    //batch_txt2WIS(R"(E:\Proj\vsProj\st_FileSave\datas_all\更新数据)", ".txt");
+    //batch_txt2WIS(R"(E:\Proj\vsProj\st_FileSave\datas_all\新建文件夹)", ".dat");
 
 
 
-
+    //----------------------------------------------------------------------------
 
     Fst_ttt fst_ttt;
-    fst_ttt.ft_main();
+    int num_depth;
+   // fst_ttt.ft_main(); read_TFWV_dat
+    fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\Slowness.txt)",&num_depth);
+    fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\TFWV01.dat)", num_depth);
 
+
+
+
+
+
+    /*-----------------------------------------------*/
+  
     //float ret[100];
     //float scard[8] = {0};//
     //float depth;
@@ -959,9 +1002,7 @@ int main()
     //int i = 0;
     //int k = 0;
 
-
-
-   
+     
     /*for (int i = 0; i < 8; i++)
     {
         tstart[i] = 0;
@@ -1027,9 +1068,7 @@ int main()
         << " dop:" << dop << std::endl;*/
     
     // --
-
-
-
+ 
     //void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, double Calpr,
     //    double dtf, double tlod, double slns, double dr, double vav,
     //    double* tmogrm, double* Rtmogrm, double* ttfit, double* ssfit,
