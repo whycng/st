@@ -32,7 +32,7 @@ void test1(float slowness, float tt, int nsamp, int nR, float RR, float period,
 // #include "mex.h"     //Matlab调用C的函数
 void fstbrkX(float slowness, float tt, int nsamp, int nR, float RR, float period,
 	float wdwdth, float thrs, float wvlen, float pkmethod, float* rarvtm,
-	float signal[8 * 672], float tstart[8])
+	float* signal, float* tstart )
 {
 	int i, j, lwn;
 	int istrt;

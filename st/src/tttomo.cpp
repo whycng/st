@@ -124,17 +124,24 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	*ssd = 1e6 / Vdeep;
 	j0 = (int)(rb / dr);// Calpr / 2 / dr
 
+	
+	// 这一段从 55-65(大概，根据j0定) vav=10，赋值
 	for (j = 0; j <= j0; j++)
-	{
+	{ 
 		tmogrm[60 + j] = 0.7 * vav;
 		tmogrm[60 - j] = 0.7 * vav;
 		Rtmogrm[60 + j] = 0.0;
 		Rtmogrm[60 - j] = 0.0; 
+	/*	if (60 + j >= 55)
+		{ 
+			std::cout << "【Message】 tmogrm[60 + " << j << "]" << tmogrm[60 + j] << std::endl;
+			std::cout << "【Message】 tmogrm[60 - " << j << "]" << tmogrm[60 - j] << std::endl;
+		}*/
 	}
 
 	for (j = j0 + 1; j < 61; j++)
 	{
-		
+		//计算各个径向点的深度rd
 		rd = j * dr;
 		
 		////exponential variation model   这部分是关键，一个衰减指数实现单极纵波的几个短周期的快速拟合// 
@@ -142,16 +149,7 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	/*	std::cout << "【Message142】 V:" << V << std::endl
 			<< "Vdeep - V0:" << Vdeep - V0 << std::endl
 			<< "exp(-2 * (rd - rb) / (*dop)): " << exp(-2 * (rd - rb) / (*dop)) << std::endl;*/
-
-
-	/*	std::cout << "    60 + j:" << 60 + j << 
-			  "    60 - j:" << 60 - j <<
-			"   ,j:" << j << " ,rd:" << rd <<
-			 "  ,V:" << V << std::endl;*/
-
-	/*	float t = (Vdeep - V);
-		int index = 60 + j;*/
-		//tmogrm[120] = 1;
+ 
 		tmogrm[60 + j] = (Vdeep - V);
 		tmogrm[60 - j] = tmogrm[60 + j];
 		Rtmogrm[60 + j] = V / Vdeep * 100;
@@ -203,8 +201,12 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 
 	for (i = 0; i < nrec; i++)
 	{
+		double test_a = ttslns[i];
 		ttfit[i] = ttslns[i] + (ttfit[i] - (TR + i * RR) / V) * 1e6;
-		std::cout << "【Message201】ttfit[" << i << "]:" << ttfit[i] << std::endl;
+		double test_z = (ttfit[i] - (TR + i * RR) / V);
+		double test_y = (ttfit[i] - (TR + i * RR) / V) * 1e6;
+		double test_x = ttfit[i];
+		//std::cout << "【Message】<tttomo>ttfit[" << i << "]:" << ttfit[i] << std::endl;
 	}
 
 	*ssfit = 1.0e6 / V;
@@ -505,7 +507,7 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 						break;
 			}
 			if (*nfunk >= NMAX) {
-				printf("NMAX exceeded");
+				// printf("NMAX exceeded");
 				return;
 			}
 			*nfunk += 2;
