@@ -44,6 +44,9 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	// dop, 最大穿透深度
 {
 
+	 
+
+
 	int i, j, j0, iter;
 	float  V, Vdeep, testTT, ttf, slnsav, rd, rb;
 	float** p, * y, * param;
@@ -122,7 +125,11 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	if (*dop < 0.01 * rb) *dop = 0.01 * rb;
 	*ss0 = 1e6 / V0;
 	*ssd = 1e6 / Vdeep;
-	j0 = (int)(rb / dr);// Calpr / 2 / dr
+	j0 = (int)(rb / dr);// Calpr / 2 / dr  
+	/*   
+	j0 = 3,         Calpr = 0.648,  rb=0.3,  dr = 0.08   --0.2
+	j0 = 121        Calpr = 20.33   rb=10    dr =0.08    --6.269927 in 英寸，需要*0.0254
+	*/
 
 	
 	// 这一段从 55-65(大概，根据j0定) vav=10，赋值

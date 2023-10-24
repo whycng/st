@@ -22,11 +22,11 @@
 #include "fstbrk.h"
 
 
-void test1(float slowness, float tt, int nsamp, int nR, float RR, float period,
-	float wdwdth, float thrs, float wvlen, float pkmethod, float* rarvtm,
-	float signal[8 * 672], float tstart[8]) {
-	int x = 0;
-}
+//void test1(float slowness, float tt, int nsamp, int nR, float RR, float period,
+//	float wdwdth, float thrs, float wvlen, float pkmethod, float* rarvtm,
+//	float signal[8 * 672], float tstart[8]) {
+//	int x = 0;
+//}
 
 
 // #include "mex.h"     //Matlab调用C的函数

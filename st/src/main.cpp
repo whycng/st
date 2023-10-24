@@ -952,19 +952,59 @@ int main()
     /*注意点：NMAX*/
     Fst_ttt fst_ttt; 
    
-   
-    // 读取到DTC-slowness数据，数组
-    fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\Slowness.txt)" );
-    // 读取到文件头信息到结构体 tfw_firstLine
-    fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\TFWV01.dat)" );
-    // 参数初始化
-    fst_ttt.init_par();
-    // 处理数据-存储实际刨面数据到txt,其他数据未保存
-    fst_ttt.handle_fst(R"(E:\Proj\vsProj\st_FileSave\测试数据\tmogrm.txt)");
+    int test_fa = 2;
+    switch (test_fa) 
+    {
+    case 1:
+    {
+        // 读取到DTC-slowness数据，数组 --Caliper
+        fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\Slowness.txt)", "");
+        // 读取到文件头信息到结构体 tfw_firstLine
+        fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\TFWV01.dat)");
+        // 参数初始化
+        fst_ttt.init_par();
+        // 处理数据-存储实际刨面数据到txt,其他数据未保存
+        fst_ttt.handle_fst(R"(E:\Proj\vsProj\st_FileSave\测试数据\tmogrm.txt)");
+        break;
+    }
+    case 2: 
+        fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\SLW-Caliper.dat)", "Caliper"); 
+        fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\TFWV01.dat)");
+        fst_ttt.init_par();
+        fst_ttt.handle_fst(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\tmogrm2test.txt)");
+        break;
+    default:
+        break;
+    } 
     //测试，用于计算单个深度点测试
-    //fst_ttt.ft_main();  
+    //fst_ttt.ft_main(); //测试发现没有触发 NMAX
+
+    /*  单位问题：--> 内部单位全为英尺
+    井径是英寸  ，转英尺 double -
+    时差单位可能 us/m 也可能是 us/ft(英尺)  -    
+        dr:3ft/60 而不是 1m/60, -
+        间隔0.1524m改为英尺 -
+        TR,RR 转英尺 -
+        W1 W2 kHz
+
+    计算速度考虑：10e6
+
+    */
+
+    /* 处理流程：
+    滤波  37
+    计算 ttt   81   249 SAV=mean(...) 计算的时候处理非零项
+
+    m_ttpick 传进去之前进行滤波-一阶中值滤波 medfilt1
+    m_ttslns 需要计算 
+    vav 需要计算
 
 
+    三个文件保存，列名tmg001,tmg002 ...
+    Rtmg001 Rtmg002
+    4个值 + 8个ttfit  不存dop
+    最后单位转为m
+    */
      
 	return 0;
 }
