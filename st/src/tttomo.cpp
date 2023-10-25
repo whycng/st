@@ -248,7 +248,7 @@ float tvtm(float V)
 	// static float T2R, sdo, Vf, V0//
 	float sn, cs, gv1, Z, TT;
 
-	sn = Vf / V;
+	sn = Vf / V;/* 问题在这*/
 	cs = sqrt(1.0 - sn * sn);
 	Z = T2R - sdo * sn / cs;
 	gv1 = 2 * V * sqrt(1.0 - V0 * V0 / V / V + 1e-6) / Z;
@@ -514,7 +514,7 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 						break;
 			}
 			if (*nfunk >= NMAX) {
-				// printf("NMAX exceeded");
+			   // printf("NMAX exceeded");
 				return;
 			}
 			*nfunk += 2;

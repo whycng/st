@@ -12,8 +12,13 @@
 #include "fst_ttt.h" // 处理 fstbrk tttomo
 #include "test.h"// 用于测试
 
-// 折叠代码
-#pragma region Velo,SWI,WIS 数据读取等
+/*主要功能实现见 fst_ttt.cpp 与 fst_ttt.h 
+文件结构：fst_ttt的类调用 fstbrk.cpp 与 tttomo.cpp
+          test.cpp 用于测试
+          base.cpp 实现常用的基本功能*/
+
+// 直接折叠这部分代码即可，与主功能无关
+#pragma region Velo,SWI,WIS 数据读取等，与主功能无关
  
 //WIS 读取文件头信息 --信息不明确，搁置
 void Read_FileInfor( FILE* fp)
@@ -947,16 +952,17 @@ int main()
 //    "E:数据\\output_reflection_image_b2.dat", 513);//
     // 示例见 test.cpp 
 
-    // 2.
+    // 2.主要功能
     //------处理 fstbrk tttomo----------------------------------------------------------------------
     /*注意点：NMAX*/
     Fst_ttt fst_ttt; 
-   
-    int test_fa = 2;
+    
+    int test_fa = 2;/*测试两组数据，第一组不带井直径的，第二组带井直径*/
     switch (test_fa) 
     {
     case 1:
     {
+        std::string outFilePath = R"(E:\Proj\vsProj\st_FileSave\测试数据)";
         // 读取到DTC-slowness数据，数组 --Caliper
         fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\Slowness.txt)", "");
         // 读取到文件头信息到结构体 tfw_firstLine
@@ -964,47 +970,22 @@ int main()
         // 参数初始化
         fst_ttt.init_par();
         // 处理数据-存储实际刨面数据到txt,其他数据未保存
-        fst_ttt.handle_fst(R"(E:\Proj\vsProj\st_FileSave\测试数据\tmogrm.txt)");
+        fst_ttt.handle_fst(outFilePath);
         break;
     }
     case 2: 
+    {
+        std::string outFilePath = R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi)";
         fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\SLW-Caliper.dat)", "Caliper"); 
         fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\TFWV01.dat)");
         fst_ttt.init_par();
-        fst_ttt.handle_fst(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\tmogrm2test.txt)");
+        fst_ttt.handle_fst(outFilePath);
         break;
+    }
     default:
         break;
     } 
-    //测试，用于计算单个深度点测试
-    //fst_ttt.ft_main(); //测试发现没有触发 NMAX
 
-    /*  单位问题：--> 内部单位全为英尺
-    井径是英寸  ，转英尺 double -
-    时差单位可能 us/m 也可能是 us/ft(英尺)  -    
-        dr:3ft/60 而不是 1m/60, -
-        间隔0.1524m改为英尺 -
-        TR,RR 转英尺 -
-        W1 W2 kHz
-
-    计算速度考虑：10e6
-
-    */
-
-    /* 处理流程：
-    滤波  37
-    计算 ttt   81   249 SAV=mean(...) 计算的时候处理非零项
-
-    m_ttpick 传进去之前进行滤波-一阶中值滤波 medfilt1
-    m_ttslns 需要计算 
-    vav 需要计算
-
-
-    三个文件保存，列名tmg001,tmg002 ...
-    Rtmg001 Rtmg002
-    4个值 + 8个ttfit  不存dop
-    最后单位转为m
-    */
      
 	return 0;
 }

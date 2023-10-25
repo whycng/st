@@ -77,6 +77,39 @@ void read_test_fd(const char* fileName, const char* outFielName, int mode )
 
 
 
+#pragma region 23.10.25
+//测试，用于计算单个深度点测试
+//fst_ttt.ft_main(); //测试发现没有触发 NMAX
+
+/*  单位问题：--> 内部单位全为英尺 -
+井径是英寸  ，转英尺 double -
+时差单位可能 us/m 也可能是 us/ft(英尺)  -
+    dr:3ft/60 而不是 1m/60, -
+    间隔0.1524m改为英尺 -
+    TR,RR 转英尺 -
+    W1 W2 kHz
+
+计算速度考虑：10e6 -
+
+*/
+
+/* 处理流程：
+滤波  37 -
+计算 ttt   81   249 SAV=mean(...) 计算的时候处理非零项 -
+
+m_ttpick 传进去之前进行滤波-一阶中值滤波 medfilt1 -
+m_ttslns 需要计算 -
+vav 需要计算 -
+
+
+三个文件保存，列名tmg001,tmg002 ...
+Rtmg001 Rtmg002
+4个值 + 8个ttfit  不存dop
+最后单位转为m
+*/
+#pragma endregion
+
+
 #pragma region 23.10.22 
 /*
 ImgRes_Pre_XX.dat：513 (double类型)
