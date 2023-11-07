@@ -12,6 +12,7 @@
 
 */
 
+ 
 // 读取测试--二进制输出 --tmp
 void read_test_b(const char* fileName, const char* outFielName, int mode )
 {

@@ -303,6 +303,8 @@ void read_VeloSection_dat_d(const char* fileName, const char* outFielName, int n
 * 读取文本数据，保存为WIS格式
 mode=1 列名SWI
 mode=2 列名VEP
+mode=3 列名tmogrm
+mode=4 列名Rtmogrm
 */
 void read_txt_as_WIS_d(const char* fileName, const char* outFielName, int nwf_L_set = 501, int mode = 1)
 { 
@@ -349,9 +351,10 @@ void read_txt_as_WIS_d(const char* fileName, const char* outFielName, int nwf_L_
 
     fprintf_s(output, "CURVENAME ="); // 
 
-    char name[11];
+    
     if (mode == 1)
     {
+        char name[11];
         for (int i = 0; i < nwf_L_set - 1; i++)
         {
             sprintf_s(name, " SWIS%04d,", i); //使用sprintf函数来格式化字符串 
@@ -362,12 +365,35 @@ void read_txt_as_WIS_d(const char* fileName, const char* outFielName, int nwf_L_
     }
     else if(mode == 2)
     {
+        char name[11];
         for (int i = 0; i < nwf_L_set - 1; i++)
         {
             sprintf_s(name, " VEP%04d,", i); //使用sprintf函数来格式化字符串 
             fprintf_s(output, " %s", name);
         }
         sprintf_s(name, " VEP%04d", nwf_L_set - 1); //使用sprintf函数来格式化字符串 
+        fprintf_s(output, " %s", name);
+    }
+    else if (mode == 3)
+    {
+        char name[20];
+        for (int i = 0; i < nwf_L_set - 1; i++)
+        {
+            sprintf_s(name, " tmogrm%04d,", i); //使用sprintf函数来格式化字符串 
+            fprintf_s(output, " %s", name);
+        }
+        sprintf_s(name, " tmogrm%04d", nwf_L_set - 1); //使用sprintf函数来格式化字符串 
+        fprintf_s(output, " %s", name);
+    }
+    else if (mode == 4)
+    {
+        char name[20];
+        for (int i = 0; i < nwf_L_set - 1; i++)
+        {
+            sprintf_s(name, " Rtmogrm%04d,", i); //使用sprintf函数来格式化字符串 
+            fprintf_s(output, " %s", name);
+        }
+        sprintf_s(name, " Rtmogrm%04d", nwf_L_set - 1); //使用sprintf函数来格式化字符串 
         fprintf_s(output, " %s", name);
     }
     else
@@ -388,7 +414,7 @@ void read_txt_as_WIS_d(const char* fileName, const char* outFielName, int nwf_L_
             fprintf_s(output, " %s", name);
         }
     }
-    else
+    else if(mode == 2)
     {
         for (int i = 0; i < nwf_L_set; i++)
         {
@@ -397,7 +423,26 @@ void read_txt_as_WIS_d(const char* fileName, const char* outFielName, int nwf_L_
             fprintf_s(output, " %s", name);
         }
     }
- 
+    else if (mode == 3)
+    {
+        char name[20];
+        for (int i = 0; i < nwf_L_set; i++)
+        {
+            
+            sprintf_s(name, " tmogrm%04d", i); //使用sprintf函数来格式化字符串 
+            fprintf_s(output, " %s", name);
+        }
+    }
+    else if (mode == 4)
+    {
+        char name[20];
+        for (int i = 0; i < nwf_L_set; i++)
+        {
+            
+            sprintf_s(name, " Rtmogrm%04d", i); //使用sprintf函数来格式化字符串 
+            fprintf_s(output, " %s", name);
+        }
+    }
 
   
     index = 0;
@@ -957,35 +1002,63 @@ int main()
     /*注意点：NMAX*/
     Fst_ttt fst_ttt; 
     
-    int test_fa = 2;/*测试两组数据，第一组不带井直径的，第二组带井直径*/
+    int test_fa = 3;/*测试两组数据，第一组不带井直径 ，第二组带井直径*/
     switch (test_fa) 
     {
     case 1:
     {
         std::string outFilePath = R"(E:\Proj\vsProj\st_FileSave\测试数据)";
         // 读取到DTC-slowness数据，数组 --Caliper
-        fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\Slowness.txt)", "");
+        // fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\Slowness.txt)", "");
+        fst_ttt.read_DTC((outFilePath + "/Slowness.txt").c_str(), "");
         // 读取到文件头信息到结构体 tfw_firstLine
-        fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\TFWV01.dat)");
+        //fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\TFWV01.dat)");
+        fst_ttt.read_TFWV_dat((outFilePath + "/TFWV01.dat").c_str());
         // 参数初始化
         fst_ttt.init_par();
         // 处理数据-存储实际刨面数据到txt,其他数据未保存
-        fst_ttt.handle_fst(outFilePath);
+        fst_ttt.handle_fst(outFilePath); 
         break;
     }
     case 2: 
     {
         std::string outFilePath = R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi)";
-        fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\SLW-Caliper.dat)", "Caliper"); 
-        fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\TFWV01.dat)");
+        /*fst_ttt.read_DTC(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\SLW-Caliper.dat)", "Caliper"); 
+        fst_ttt.read_TFWV_dat(R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi\TFWV01.dat)");*/
+        fst_ttt.read_DTC((outFilePath + "/SLW-Caliper.dat").c_str(), "Caliper");
+        fst_ttt.read_TFWV_dat((outFilePath + "/TFWV01.dat").c_str());
         fst_ttt.init_par();
+
+        //测试
+        fst_ttt.test_read_real_fstbrk(R"(E:\Proj\vsProj\st_FileSave\测试数据\真实数据\Arrivals.dat)");
+
         fst_ttt.handle_fst(outFilePath);
+        //  转格式，添加文件头部信息   121--
+        read_txt_as_WIS_d((outFilePath + "/tmogrm.txt").c_str(),
+            (outFilePath + "/tmogrmWIS2.txt").c_str(),
+            121, 3);// mode=3--tmogrm
+        read_txt_as_WIS_d((outFilePath + "/Rtmogrm.txt").c_str(),
+            (outFilePath + "/RtmogrmWIS2.txt").c_str(),
+            121, 4);// mode=4--Rtmogrm
         break;
     }
     default:
         break;
     } 
 
-     
+
+    //测试
+    // 23-11-2
+    //read_as_WIS(R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\LY1-Vel.dat)",
+    //    R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\out_LY1-Vel.txt)", 501,2); 
+    read_as_WIS(R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\XT1-Vel.dat)",
+        R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\out_XT1-Vel.txt)", 501, 2);//
+
+    // 直接转
+  /*  std::string outFilePath = R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi)";
+    read_txt_as_WIS_d((outFilePath + "/Rtmogrm.txt").c_str(),
+        (outFilePath + "/RtmogrmWIS.txt").c_str(),
+        672 * 8, 4);*/
+
 	return 0;
 }

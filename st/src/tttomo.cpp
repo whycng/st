@@ -27,6 +27,12 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	double dtf, double tlod, double slns, double dr, double vav,
 	double* tmogrm, double* Rtmogrm, double* ttfit, double* ssfit,
 	double* ss0, double* ssd, double* dop)
+
+	//tttomo(m_ttpick, m_ttslns, tfwv_f.nR, tfwv_f.TR, tfwv_f.RR, Caliper[i], m_dtf,
+	//	m_tlod_diaTOOL, DTC[i], m_dr, m_Vav,
+	//	m_tmogrm, m_Rtmogrm, m_ttfit, &m_ssfit,
+	//	&m_ss0, &m_ssd, &m_dop);
+	// 
 	// ttpick, 提取波至(1~nwf 道)
 	// ttslns, 时差积分(1~nwf 道, 不考虑流体部分)
 	// Calpr, 井径, m
@@ -51,6 +57,10 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	float  V, Vdeep, testTT, ttf, slnsav, rd, rb;
 	float** p, * y, * param;
 	float a, b, c, fmin;
+	float tp_val = 0;
+	float* T2R = &tp_val;
+	float TR, RR, nR;
+	float sdo, gv = 0, Vf, V0 = 0, TTrsd[12], Vdat;
 
 	//Allocate matrix and vector for simplex minimization routine //
 	p = matrix(1, 3, 1, 2);
@@ -101,21 +111,21 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 		for (i = 1; i <= 3; i++)
 		{
 			for (j = 1; j <= 2; j++) param[j] = p[i][j];
-			y[i] = TTcstfunc(param);
+			y[i] = TTcstfunc(param, T2R, TR, RR, nR, sdo, gv, Vf, V0, TTrsd, Vdat);
 		}
 
-		amoeba(p, y, 2, 1.0e-3, &TTcstfunc, &iter); //阿米巴巴//
+		amoeba(p, y, 2, 1.0e-3, &TTcstfunc, &iter, T2R, TR, RR, nR, sdo, gv, Vf, V0, TTrsd, Vdat); //阿米巴巴//  
 		for (j = 1; j <= 2; j++) param[j] = p[1][j];
 
 		gv = param[1]; //Model velocity gradient//
 		V0 = param[2]; //Model borehole wall velocity//
 
 		//Now, find the deepest penetration model velocity //
-		T2R = TR + (nR - 1) * RR;
+		*T2R = TR + (nR - 1) * RR;
 		a = Vdat;
 		b = 1.2 * Vdat;
 		c = 2 * Vdat;
-		fmin = brent(a, b, c, &vg2v, 1e-5, &Vdeep);
+		fmin = brent(a, b, c, &vg2v, 1e-5, &Vdeep, T2R, Vf, sdo, gv, V0);
 
 	}
 
@@ -138,12 +148,7 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 		tmogrm[60 + j] = 0.7 * vav;
 		tmogrm[60 - j] = 0.7 * vav;
 		Rtmogrm[60 + j] = 0.0;
-		Rtmogrm[60 - j] = 0.0; 
-	/*	if (60 + j >= 55)
-		{ 
-			std::cout << "【Message】 tmogrm[60 + " << j << "]" << tmogrm[60 + j] << std::endl;
-			std::cout << "【Message】 tmogrm[60 - " << j << "]" << tmogrm[60 - j] << std::endl;
-		}*/
+		Rtmogrm[60 - j] = 0.0;  
 	}
 
 	for (j = j0 + 1; j < 61; j++)
@@ -161,13 +166,15 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 		tmogrm[60 - j] = tmogrm[60 + j];
 		Rtmogrm[60 + j] = V / Vdeep * 100;
 		Rtmogrm[60 - j] = Rtmogrm[60 + j];
+		/*std::cout << "[MEssage]Rtmogrm " << 60 + j << ":" << Rtmogrm[60 + j] <<
+			"    Rtmogrm " << 60 - j << ":" << Rtmogrm[60 - j] << std::endl;*/
 	}
 
 	//Compute model traveltime fit to data //
 
 	for (i = 0; i < nrec; i++)
 	{
-		T2R = TR + i * RR;
+		*T2R = TR + i * RR;
 		if (gv < 1)
 			V = V0;
 		else
@@ -175,12 +182,13 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 			a = V0;
 			b = 1.2 * V0;
 			c = 2 * V0;
-			fmin = brent(a, b, c, &vg2v, 1e-6, &V);
+			fmin = brent(a, b, c, &vg2v, 1e-6, &V, T2R, Vf, sdo, gv, V0);
 		}
 		// std::cout << "V:" << V  << std::endl; -- 8000
-		ttfit[i] = tvtm(V);
+		ttfit[i] = tvtm(V, T2R, Vf, sdo, V0);
 		double t = ttfit[i];
 		//std::cout << "【Message172】ttfit[" << i << "]:" << ttfit[i] << std::endl;
+		int tt = 55;
 	}
 
 	// Compute model velocity fit to data //
@@ -241,7 +249,7 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
  *
  *----------------------------------------------------------------*/
 
-float tvtm(float V)
+float tvtm(float V, float* T2R, float Vf, float sdo, float V0)
 {
 	// function TT=tvtm(V)
 
@@ -250,7 +258,7 @@ float tvtm(float V)
 
 	sn = Vf / V;/* 问题在这*/
 	cs = sqrt(1.0 - sn * sn);
-	Z = T2R - sdo * sn / cs;
+	Z = *T2R - sdo * sn / cs;
 	gv1 = 2 * V * sqrt(1.0 - V0 * V0 / V / V + 1e-6) / Z;
 	if (gv1 < 100.0)
 		TT = sdo / Vf / cs + Z / V;
@@ -279,7 +287,8 @@ float tvtm(float V)
  *     TTcstfunc函数值
  *
  *----------------------------------------------------------------*/
-float TTcstfunc(float* param)
+float TTcstfunc(float* param, float* T2R, float TR, float RR, float nR,
+	float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat)
 {
 	// function Terr=TTcstfunc(param)//
 
@@ -300,7 +309,7 @@ float TTcstfunc(float* param)
 
 	for (i = 0; i < nrec; i++)
 	{
-		T2R = Rcv[i];
+		*T2R = Rcv[i];
 		if (gv < 1)
 			vsyn = V0;
 		else
@@ -309,10 +318,10 @@ float TTcstfunc(float* param)
 			b = 1.2 * V0;
 			c = 2 * V0;
 
-			fmin = brent(a, b, c, &vg2v, 1e-5, &vsyn);
+			fmin = brent(a, b, c, &vg2v, 1e-5, &vsyn, T2R, Vf, sdo, gv, V0);
 		}
 
-		Tsyn[i] = tvtm(vsyn);
+		Tsyn[i] = tvtm(vsyn, T2R, Vf, sdo, V0);
 	}
 
 
@@ -365,14 +374,14 @@ c        V   =  maximum velocity of penetrated depth at T2R
 c        gv =  velocity gradient of the model
 c
 -------------------------------------------------------------------------------------------------------------------------------****/
-float vg2v(float V)
+float vg2v(float V, float* T2R, float Vf, float sdo, float gv, float V0)
 {
 	//function TT=vg2v(V)//
 // static float T2R, sdo, gv, Vf, V0//
 	float sn, cs, TT, Z;
 	sn = Vf / V;
 	cs = sqrt(1.0 - sn * sn + 0.0000001);
-	Z = T2R - sdo * sn / cs;
+	Z = *T2R - sdo * sn / cs;
 	TT = gv * Z - 2 * V * sqrt(1.0 - V0 * V0 / V / V + 0.000001);
 	TT = TT * TT;
 	return(TT);
@@ -388,7 +397,8 @@ ZEPS is a small number that protects against trying to achieve fractional accura
 happens to be exactly zero. */
 #define SHFT(a,b,c,d) (a)=(b);(b)=(c);(c)=(d);
 #define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
-float brent(float ax, float bx, float cx, float (*f)(float), float tol, float* xmin)
+float brent(float ax, float bx, float cx, float (*f)(float V, float* T2R, float Vf, float sdo, float gv, float V0), float tol, float* xmin,
+	float* T2R, float Vf, float sdo, float gv, float V0)
 /* Given a function f, and given a bracketing triplet of abscissas ax, bx, cx (such that bx is
 between ax and cx, and f(bx) is less than both f(ax) and f(cx)), this routine isolates
 the minimum to a fractional precision of about tol using Brent’s method. The abscissa of
@@ -402,7 +412,7 @@ returned function value.*/
 	a = (ax < cx ? ax : cx); //a and b must be in ascending order//
 	b = (ax > cx ? ax : cx); //but input abscissas need not be//
 	x = w = v = bx; //Initializations...//
-	fw = fv = fx = (*f)(x);
+	fw = fv = fx = (*f)(x, T2R, Vf, sdo, gv, V0);
 	for (iter = 1; iter <= ITMAX; iter++) { //Main program loop//
 		xm = 0.5 * (a + b);
 		tol2 = 2.0 * (tol1 = tol * fabs(x) + ZEPS);
@@ -434,7 +444,7 @@ returned function value.*/
 			d = CGOLD * (e = (x >= xm ? a - x : b - x));
 		}
 		u = (fabs(d) >= tol1 ? x + d : x + SIGN(tol1, d));
-		fu = (*f)(u);
+		fu = (*f)(u, T2R, Vf, sdo, gv, V0);
 		//This is the one function evaluation per iteration//
 		if (fu <= fx) { //Now decide what to do with our function evaluation//
 			if (u >= x) a = x; else b = x;
@@ -469,7 +479,10 @@ psum[j]=sum;}
 #define SWAP(a,b) {swap=(a);(a)=(b);(b)=swap;}
 
 void amoeba(float** p, float y[], int ndim, float ftol,
-	float (*funk)(float[]), int* nfunk)
+	float (*funk)(float[], float* T2R, float TR, float RR, float nR,
+		float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat), int* nfunk,
+	float* T2R, float TR, float RR, float nR,
+	float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat)
 	/****------------------------------------------------------------------------------------------------------------
 	Description:
 	Multidimensional minimization of the function funk(x) where x[1..ndim] is a vector in ndim
@@ -481,9 +494,7 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 	y will have been reset to ndim+1 new points all within ftol of a minimum function value, and
 	nfunk gives the number of function evaluations taken.
 	-----------------------------------------------------------------------------------------------------------------*****/
-{
-	float amotry(float** p, float y[], float psum[], int ndim,
-		float (*funk)(float[]), int ihi, float fac);
+{ 
 	int i, ihi, ilo, inhi, j, mpts = ndim + 1;
 	float rtol, sum, swap, ysave, ytry, * psum;
 	psum = vector(1, ndim);
@@ -522,19 +533,22 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 			Begin a new iteration. First extrapolate by a factor .1 through the face of the simplex
 			across from the high point, i.e., reflect the simplex from the high point.
 			-----------------------------------------------------------------------------------------****/
-			ytry = amotry(p, y, psum, ndim, funk, ihi, -1.0);
+			ytry = amotry(p, y, psum, ndim, funk, ihi, -1.0, T2R, TR, RR, nR,
+				sdo, gv, Vf, V0, TTrsd, Vdat);
 			if (ytry <= y[ilo])
 
 				//Gives a result better than the best point, so try an additional extrapolation by a factor 2//
 
-				ytry = amotry(p, y, psum, ndim, funk, ihi, 2.0);
+				ytry = amotry(p, y, psum, ndim, funk, ihi, 2.0, T2R, TR, RR, nR,
+					sdo, gv, Vf, V0, TTrsd, Vdat);
 			else if (ytry >= y[inhi]) {
 
 				/***The reflected point is worse than the second-highest, so look for an intermediate
 				lower point, i.e., do a one-dimensional contraction****/
 
 				ysave = y[ihi];
-				ytry = amotry(p, y, psum, ndim, funk, ihi, 0.5);
+				ytry = amotry(p, y, psum, ndim, funk, ihi, 0.5, T2R, TR, RR, nR,
+					sdo, gv, Vf, V0, TTrsd, Vdat);
 				if (ytry >= ysave) {
 
 					//Can't seem to get rid of that high point. Better contract around //
@@ -544,7 +558,8 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 						if (i != ilo) {
 							for (j = 1; j <= ndim; j++)
 								p[i][j] = psum[j] = 0.5 * (p[i][j] + p[ilo][j]);
-							y[i] = (*funk)(psum);
+							y[i] = (*funk)(psum, T2R, TR, RR, nR,
+								sdo, gv, Vf, V0, TTrsd, Vdat);
 						}
 					}
 					*nfunk += ndim;
@@ -557,7 +572,10 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 }
 
 float amotry(float** p, float y[], float psum[], int ndim,
-	float (*funk)(float[]), int ihi, float fac)
+	float (*funk)(float[], float* T2R, float TR, float RR, float nR,
+		float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat), int ihi, float fac,
+	float* T2R, float TR, float RR, float nR,
+	float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat)
 	/**----------------------------------------------------------------------
 	Extrapolates by a factor fac through the face of the simplex across from the high point, tries
 	it, and replaces the high point if the new point is better.
@@ -569,7 +587,8 @@ float amotry(float** p, float y[], float psum[], int ndim,
 	fac1 = (1.0 - fac) / ndim;
 	fac2 = fac1 - fac;
 	for (j = 1; j <= ndim; j++) ptry[j] = psum[j] * fac1 - p[ihi][j] * fac2;
-	ytry = (*funk)(ptry); //Evaluate the function at the trial point//
+	ytry = (*funk)(ptry, T2R, TR, RR, nR,
+		sdo, gv, Vf, V0, TTrsd, Vdat);  //Evaluate the function at the trial point//
 	if (ytry < y[ihi]) { //If it's better than the highest, then replace the highest//
 		y[ihi] = ytry;
 		for (j = 1; j <= ndim; j++) {
