@@ -1002,7 +1002,7 @@ int main()
     /*注意点：NMAX*/
     Fst_ttt fst_ttt; 
     
-    int test_fa = 3;/*测试两组数据，第一组不带井直径 ，第二组带井直径*/
+    int test_fa = 2;/*测试两组数据，第一组不带井直径 ，第二组带井直径*/
     switch (test_fa) 
     {
     case 1:
@@ -1051,8 +1051,8 @@ int main()
     // 23-11-2
     //read_as_WIS(R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\LY1-Vel.dat)",
     //    R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\out_LY1-Vel.txt)", 501,2); 
-    read_as_WIS(R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\XT1-Vel.dat)",
-        R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\out_XT1-Vel.txt)", 501, 2);//
+    //read_as_WIS(R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\XT1-Vel.dat)",
+    //    R"(E:\Proj\vsProj\st_FileSave\数据-转换-11-2\out_XT1-Vel.txt)", 501, 2);//
 
     // 直接转
   /*  std::string outFilePath = R"(E:\Proj\vsProj\st_FileSave\测试数据\file2Capi)";

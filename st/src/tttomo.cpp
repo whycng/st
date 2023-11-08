@@ -18,15 +18,11 @@
 #include <string.h>
 #include "tttomo.h"
 #include <iostream>
-
-void testTtt() {
-	;
-}
-
+ 
 void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, double Calpr,
 	double dtf, double tlod, double slns, double dr, double vav,
 	double* tmogrm, double* Rtmogrm, double* ttfit, double* ssfit,
-	double* ss0, double* ssd, double* dop)
+	double* ss0, double* ssd, double* dop, int arrsize)
 
 	//tttomo(m_ttpick, m_ttslns, tfwv_f.nR, tfwv_f.TR, tfwv_f.RR, Caliper[i], m_dtf,
 	//	m_tlod_diaTOOL, DTC[i], m_dr, m_Vav,
@@ -60,8 +56,11 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	float tp_val = 0;
 	float* T2R = &tp_val;
 	float TR, RR, nR;
-	float sdo, gv = 0, Vf, V0 = 0, TTrsd[12], Vdat;
+	float sdo, gv = 0, Vf, V0 = 0, *TTrsd, Vdat, size_TTrsd;
+	int dlen = (arrsize-1)/2;
 
+	size_TTrsd = 20;//12 ,改成20没有发现问题
+	TTrsd = (float*)alloca(size_TTrsd * sizeof(float));
 	//Allocate matrix and vector for simplex minimization routine //
 	p = matrix(1, 3, 1, 2);
 	y = vector(1, 3);
@@ -111,10 +110,10 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 		for (i = 1; i <= 3; i++)
 		{
 			for (j = 1; j <= 2; j++) param[j] = p[i][j];
-			y[i] = TTcstfunc(param, T2R, TR, RR, nR, sdo, gv, Vf, V0, TTrsd, Vdat);
+			y[i] = TTcstfunc(param, T2R, TR, RR, nR, sdo, gv, Vf, V0, TTrsd, Vdat, size_TTrsd);
 		}
 
-		amoeba(p, y, 2, 1.0e-3, &TTcstfunc, &iter, T2R, TR, RR, nR, sdo, gv, Vf, V0, TTrsd, Vdat); //阿米巴巴//  
+		amoeba(p, y, 2, 1.0e-3, &TTcstfunc, &iter, T2R, TR, RR, nR, sdo, gv, Vf, V0, TTrsd, Vdat, size_TTrsd); //阿米巴巴//  
 		for (j = 1; j <= 2; j++) param[j] = p[1][j];
 
 		gv = param[1]; //Model velocity gradient//
@@ -135,7 +134,7 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	if (*dop < 0.01 * rb) *dop = 0.01 * rb;
 	*ss0 = 1e6 / V0;
 	*ssd = 1e6 / Vdeep;
-	j0 = (int)(rb / dr);// Calpr / 2 / dr  
+	j0 = (int)(rb / dr);// Calpr / 2 / dr     dr:5/60
 	/*   
 	j0 = 3,         Calpr = 0.648,  rb=0.3,  dr = 0.08   --0.2
 	j0 = 121        Calpr = 20.33   rb=10    dr =0.08    --6.269927 in 英寸，需要*0.0254
@@ -145,13 +144,13 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 	// 这一段从 55-65(大概，根据j0定) vav=10，赋值
 	for (j = 0; j <= j0; j++)
 	{ 
-		tmogrm[60 + j] = 0.7 * vav;
-		tmogrm[60 - j] = 0.7 * vav;
-		Rtmogrm[60 + j] = 0.0;
-		Rtmogrm[60 - j] = 0.0;  
+		tmogrm[dlen + j] = 0.7 * vav;
+		tmogrm[dlen - j] = 0.7 * vav;
+		Rtmogrm[dlen + j] = 0.0;
+		Rtmogrm[dlen - j] = 0.0;
 	}
 
-	for (j = j0 + 1; j < 61; j++)
+	for (j = j0 + 1; j < dlen+1; j++)
 	{
 		//计算各个径向点的深度rd
 		rd = j * dr;
@@ -162,10 +161,10 @@ void tttomo(double* ttpick, double* ttslns, int nrec, double trsp, double rrsp, 
 			<< "Vdeep - V0:" << Vdeep - V0 << std::endl
 			<< "exp(-2 * (rd - rb) / (*dop)): " << exp(-2 * (rd - rb) / (*dop)) << std::endl;*/
  
-		tmogrm[60 + j] = (Vdeep - V);
-		tmogrm[60 - j] = tmogrm[60 + j];
-		Rtmogrm[60 + j] = V / Vdeep * 100;
-		Rtmogrm[60 - j] = Rtmogrm[60 + j];
+		tmogrm[dlen + j] = (Vdeep - V);
+		tmogrm[dlen - j] = tmogrm[dlen + j];
+		Rtmogrm[dlen + j] = V / Vdeep * 100;
+		Rtmogrm[dlen - j] = Rtmogrm[dlen + j];
 		/*std::cout << "[MEssage]Rtmogrm " << 60 + j << ":" << Rtmogrm[60 + j] <<
 			"    Rtmogrm " << 60 - j << ":" << Rtmogrm[60 - j] << std::endl;*/
 	}
@@ -288,13 +287,15 @@ float tvtm(float V, float* T2R, float Vf, float sdo, float V0)
  *
  *----------------------------------------------------------------*/
 float TTcstfunc(float* param, float* T2R, float TR, float RR, float nR,
-	float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat)
+	float sdo, float gv, float Vf, float V0, float* TTrsd, float Vdat, int size_TTrsd)
 {
 	// function Terr=TTcstfunc(param)//
 
  //static float T2R, TR, RR, nR, sdo, gv, Vf, V0, TTrsd[12], Vdat//
 
-	float Rcv[12], Tsyn[12];
+	//float Rcv[12], Tsyn[12];
+	float* Rcv = (float*)malloc(size_TTrsd * sizeof(float));
+	float* Tsyn = (float*)malloc(size_TTrsd * sizeof(float));
 	float a, b, c, fmin;
 	float vsyn, avt, avr, st, sr, Tscl, Terr;
 	int i, nrec;
@@ -480,9 +481,9 @@ psum[j]=sum;}
 
 void amoeba(float** p, float y[], int ndim, float ftol,
 	float (*funk)(float[], float* T2R, float TR, float RR, float nR,
-		float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat), int* nfunk,
+		float sdo, float gv, float Vf, float V0, float* TTrsd, float Vdat, int size_TTrsd), int* nfunk,
 	float* T2R, float TR, float RR, float nR,
-	float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat)
+	float sdo, float gv, float Vf, float V0, float* TTrsd, float Vdat, int size_TTrsd)
 	/****------------------------------------------------------------------------------------------------------------
 	Description:
 	Multidimensional minimization of the function funk(x) where x[1..ndim] is a vector in ndim
@@ -534,13 +535,13 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 			across from the high point, i.e., reflect the simplex from the high point.
 			-----------------------------------------------------------------------------------------****/
 			ytry = amotry(p, y, psum, ndim, funk, ihi, -1.0, T2R, TR, RR, nR,
-				sdo, gv, Vf, V0, TTrsd, Vdat);
+				sdo, gv, Vf, V0, TTrsd, Vdat, size_TTrsd);
 			if (ytry <= y[ilo])
 
 				//Gives a result better than the best point, so try an additional extrapolation by a factor 2//
 
 				ytry = amotry(p, y, psum, ndim, funk, ihi, 2.0, T2R, TR, RR, nR,
-					sdo, gv, Vf, V0, TTrsd, Vdat);
+					sdo, gv, Vf, V0, TTrsd, Vdat, size_TTrsd);
 			else if (ytry >= y[inhi]) {
 
 				/***The reflected point is worse than the second-highest, so look for an intermediate
@@ -548,7 +549,7 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 
 				ysave = y[ihi];
 				ytry = amotry(p, y, psum, ndim, funk, ihi, 0.5, T2R, TR, RR, nR,
-					sdo, gv, Vf, V0, TTrsd, Vdat);
+					sdo, gv, Vf, V0, TTrsd, Vdat, size_TTrsd);
 				if (ytry >= ysave) {
 
 					//Can't seem to get rid of that high point. Better contract around //
@@ -559,7 +560,7 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 							for (j = 1; j <= ndim; j++)
 								p[i][j] = psum[j] = 0.5 * (p[i][j] + p[ilo][j]);
 							y[i] = (*funk)(psum, T2R, TR, RR, nR,
-								sdo, gv, Vf, V0, TTrsd, Vdat);
+								sdo, gv, Vf, V0, TTrsd, Vdat, size_TTrsd);
 						}
 					}
 					*nfunk += ndim;
@@ -573,9 +574,9 @@ void amoeba(float** p, float y[], int ndim, float ftol,
 
 float amotry(float** p, float y[], float psum[], int ndim,
 	float (*funk)(float[], float* T2R, float TR, float RR, float nR,
-		float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat), int ihi, float fac,
+		float sdo, float gv, float Vf, float V0, float* TTrsd, float Vdat,int size_TTrsd), int ihi, float fac,
 	float* T2R, float TR, float RR, float nR,
-	float sdo, float gv, float Vf, float V0, float TTrsd[12], float Vdat)
+	float sdo, float gv, float Vf, float V0, float* TTrsd, float Vdat, int size_TTrsd)
 	/**----------------------------------------------------------------------
 	Extrapolates by a factor fac through the face of the simplex across from the high point, tries
 	it, and replaces the high point if the new point is better.
@@ -588,7 +589,7 @@ float amotry(float** p, float y[], float psum[], int ndim,
 	fac2 = fac1 - fac;
 	for (j = 1; j <= ndim; j++) ptry[j] = psum[j] * fac1 - p[ihi][j] * fac2;
 	ytry = (*funk)(ptry, T2R, TR, RR, nR,
-		sdo, gv, Vf, V0, TTrsd, Vdat);  //Evaluate the function at the trial point//
+		sdo, gv, Vf, V0, TTrsd, Vdat, size_TTrsd);  //Evaluate the function at the trial point//
 	if (ytry < y[ihi]) { //If it's better than the highest, then replace the highest//
 		y[ihi] = ytry;
 		for (j = 1; j <= ndim; j++) {

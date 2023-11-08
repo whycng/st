@@ -317,7 +317,7 @@ NFilter = 7;  */
     m_rarvtm = (float*)malloc(tfwv_f.nR * sizeof(float)); // 长度为 nR
     m_rarvtm_all = (float**)malloc(m_num_depth * sizeof(float*));
     // tttomo返回的数值
-    m_size_tmp = 121;//  是121
+    m_size_tmp = 201;//  121
     m_tmogrm = (double*)malloc(m_size_tmp * sizeof(double));// 60是因为tmogrm[60 + j] = 0.7 * vav;
     m_Rtmogrm = (double*)malloc(m_size_tmp * sizeof(double));
     m_ttfit = (double*)malloc(tfwv_f.nR * sizeof(double));//   ttfit[i] = tvtm(V); 
@@ -331,7 +331,8 @@ NFilter = 7;  */
     diaTOOL = diaTOOL/12.0;   %再转化为英尺 */
     TTAV_tt = (float*)malloc(m_num_depth * sizeof(float));
 
-    m_dr = 5.0f / 60.0f; 
+    //m_dr = 5.0f / 60.0f; // 
+    m_dr = 5.0f / (( m_size_tmp - 1) / 2); // 
 
     m_tstart = (float*)malloc(tfwv_f.nR * sizeof(float));
     memset(m_tstart, 0, tfwv_f.nR * sizeof(float)); 
@@ -677,7 +678,7 @@ void  Fst_ttt::handle_fst(std::string& path,
         tttomo(m_ttpick, m_ttslns, tfwv_f.nR, tfwv_f.TR, tfwv_f.RR, Caliper[i], m_dtf,
             m_tlod_diaTOOL, DTC[i], m_dr, m_Vav,
             m_tmogrm, m_Rtmogrm, m_ttfit, &m_ssfit,
-            &m_ss0, &m_ssd, &m_dop);
+            &m_ss0, &m_ssd, &m_dop, m_size_tmp);
          
 
         if (i % 70 == 0)
@@ -712,6 +713,7 @@ void  Fst_ttt::handle_fst(std::string& path,
     fclose(output_Rtmogrm);
     fclose(output_others);
     fclose(tmp_ttlsns);
+    fclose(tmp_out);
 }
 
 

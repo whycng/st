@@ -126,8 +126,7 @@ void medianFilter(float* Data , int length, int MFilter) {
             Data[i] = sum/ length;
         }
     }
-  
-
+   
     /* 不改就越界了
     for (int i = 0 + halfFilterSize + 1; i < length - halfFilterSize - 1; i++)
     */

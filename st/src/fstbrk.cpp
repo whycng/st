@@ -119,12 +119,12 @@ void fstbrkX(float slowness, float tt, int nsamp, int nR, float RR, float period
 
 		for (i = 0; i < nR; i++) rarvtm[i] += brktm - 3 * period;
 	}
-	//free(source);
-	//free(wvstk);
-	//for (i = 0; i < nR; i++) {
-	//	free(sigary[i]);
-	//	sigary[i] = NULL;
-	//}
+	free(source);//现在注释掉这里不影响了--tmp
+	free(wvstk);
+	for (i = 0; i < nR; i++) {
+		free(sigary[i]);
+		sigary[i] = NULL;
+	}
 	return;
 }
 
